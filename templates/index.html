@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CS 178 — Lab 20: Data Visualization</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #272822; /* Monokai background */
+        --surface: #3e3d32; /* Monokai darker surface */
+        --surface2: #49483e; /* Monokai lighter surface */
+        --border: #75715e; /* Monokai comments/brown */
+        --accent: #d4215f; /* Darkened pink — passes 4.5:1 on white text */
+        --accent2: #a6e22e; /* Monokai green */
+        --text: #f8f8f2; /* Monokai foreground */
+        --muted: #b5b09e; /* Lightened warm gray — passes 4.5:1 on surface */
+        --bad: #f92672; /* Monokai pink — decorative only, not body text */
+        --good: #a6e22e; /* Monokai green */
+        --mine: #66d9e8; /* Monokai cyan */
+        --yellow: #e6db74; /* Monokai yellow */
+        --orange: #fd971f; /* Monokai orange */
+        --purple: #ae81ff; /* Monokai purple */
+        --radius: 12px;
+        --mono: "Space Mono", monospace;
+        --sans: "DM Sans", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 32px 24px 64px;
+      }
+
+      /* ── Header ── */
+      .site-header {
+        max-width: 1200px;
+        margin: 0 auto 24px;
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 20px;
+      }
+      .site-header h1 {
+        font-family: var(--mono);
+        font-size: 1.1rem;
+        color: var(--orange);
+        letter-spacing: -0.5px;
+      }
+      .site-header span {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      /* ── Search + Pokémon hero panel ── */
+      .hero-panel {
+        max-width: 1200px;
+        margin: 0 auto 36px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px 32px;
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        flex-wrap: wrap;
+      }
+
+      /* Left: sprite + name stacked */
+      .pokemon-identity {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        min-width: 120px;
+      }
+      .pokemon-identity img {
+        width: 120px;
+        height: 120px;
+        image-rendering: pixelated;
+        filter: drop-shadow(0 0 12px rgba(253, 151, 31, 0.4));
+      }
+      .pokemon-identity h2 {
+        font-family: var(--mono);
+        font-size: 1.1rem;
+        font-weight: 700;
+        text-transform: capitalize;
+        letter-spacing: -0.5px;
+        color: var(--orange);
+      }
+
+      /* Right: search controls */
+      .search-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+        min-width: 220px;
+      }
+      .search-group label {
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        color: var(--muted);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+      .search-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .search-group input {
+        font-family: var(--mono);
+        font-size: 1rem;
+        padding: 12px 16px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        flex: 1;
+        min-width: 180px;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .search-group input:focus {
+        border-color: var(--orange);
+        box-shadow: 0 0 0 3px rgba(253, 151, 31, 0.15);
+      }
+      .search-group input::placeholder {
+        color: var(--muted);
+      }
+      .search-group button {
+        font-family: var(--mono);
+        font-size: 0.9rem;
+        padding: 12px 24px;
+        background: var(--accent);
+        color: var(--text);
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        font-weight: 700;
+        white-space: nowrap;
+        transition:
+          opacity 0.15s,
+          transform 0.1s;
+      }
+      .search-group button:hover {
+        opacity: 0.88;
+      }
+      .search-group button:active {
+        transform: scale(0.97);
+      }
+      #search-error {
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        color: var(--bad);
+      }
+
+      /* ── Chart grid — single column, full width matching hero panel ── */
+      .chart-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      /* ── Card ── */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: border-color 0.2s;
+        min-width: 0; /* critical: lets grid children shrink below content size */
+      }
+      .card:hover {
+        border-color: #3e4470;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface2);
+      }
+      .card-header h3 {
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+      }
+      .card-body {
+        padding: 16px;
+        flex: 1;
+      }
+      .card-body p {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 12px;
+        line-height: 1.5;
+      }
+      .card-body code {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        background: var(--bg);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--accent);
+      }
+
+      /* Badge text is always white — the Monokai colors are used as
+           tinted backgrounds only, since pink/green/cyan fail as text
+           on dark surfaces at normal size. Pink is kept as the left
+           border accent on .card-bad for decorative use. */
+      .badge {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text); /* white — always passes on tinted bg */
+      }
+      .badge-bad {
+        background: rgba(249, 38, 114, 0.45);
+      } /* pink tint, dark enough */
+      .badge-good {
+        background: rgba(166, 226, 46, 0.3);
+        color: #272822;
+      } /* green is light — dark text */
+      .badge-mine {
+        background: rgba(102, 217, 232, 0.3);
+        color: #272822;
+      } /* cyan is light — dark text */
+
+      /* Accent line on left edge of card */
+      .card-bad {
+        border-left: 3px solid var(--bad);
+      }
+      .card-good {
+        border-left: 3px solid var(--good);
+      }
+      .card-mine {
+        border-left: 3px solid var(--mine);
+      }
+
+      /* Chart container — Plotly divs expand to fill */
+      .chart-container {
+        width: 100%;
+        overflow: hidden; /* clip anything that tries to spill out */
+      }
+      .chart-container > div {
+        width: 100% !important;
+        min-width: 0 !important; /* override Plotly's default min-width */
+      }
+
+      /* Lab guide link */
+      .lab-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        color: var(--orange);
+        text-decoration: none;
+        margin-top: 4px;
+        transition: opacity 0.15s;
+      }
+      .lab-link:hover {
+        opacity: 0.75;
+      }
+      @media (max-width: 600px) {
+        .hero-panel {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="site-header">
+      <h1>CS 178 — Lab 20</h1>
+      <span>Data Visualization · PokéAPI + Plotly + Flask</span>
+    </header>
+
+    <!-- ── Hero Search Panel ──────────────────────────────────────────────── -->
+    <div class="hero-panel">
+      <!-- Sprite + name -->
+      <div class="pokemon-identity">
+        <img
+          id="pokemon-sprite"
+          src="{{ sprite_url }}"
+          alt="Sprite of {{ display_name }}"
+        />
+        <h2 id="pokemon-name">{{ display_name }}</h2>
+      </div>
+
+      <!-- Search controls -->
+      <div class="search-group">
+        <label for="pokemon-input">Search for a Pokémon</label>
+        <div class="search-row">
+          <input
+            type="text"
+            id="pokemon-input"
+            placeholder="pikachu, bulbasaur, mewtwo..."
+            autocomplete="off"
+          />
+          <button onclick="searchPokemon()">Look up ↵</button>
+        </div>
+        <span id="search-error"></span>
+        <a
+          class="lab-link"
+          href="https://hackmd.io/@profmoore/cs178-lab20-dataviz"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          📋 Lab 20 Guide →
+        </a>
+      </div>
+    </div>
+
+    <!-- Chart cards -->
+    <div class="chart-grid">
+      <!-- Bad Chart -->
+      <div class="card card-bad">
+        <div class="card-header">
+          <span class="badge badge-bad">Part A</span>
+          <h3>&#x274C; Bad Chart</h3>
+        </div>
+        <div class="card-body">
+          <p>
+            What's wrong with using a pie chart for Pokémon stats? List at least
+            three specific problems — see the lab doc for the full prompt.
+          </p>
+          <div id="bad-chart" class="chart-container">
+            {{ bad_chart | safe }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Improved Chart -->
+      <div class="card card-good">
+        <div class="card-header">
+          <span class="badge badge-good">Part A</span>
+          <h3>&#x2705; Improved Chart</h3>
+        </div>
+        <div class="card-body">
+          <p>
+            Replace the <code>good_fig</code> block in
+            <code>build_good_chart()</code> with the radar chart from the lab
+            doc. Restart Flask, then try other Pokémon.
+          </p>
+          <div id="good-chart" class="chart-container">
+            {{ good_chart | safe }}
+          </div>
+        </div>
+      </div>
+
+      <!-- My Chart -->
+      <div class="card card-mine">
+        <div class="card-header">
+          <span class="badge badge-mine">Part B</span>
+          <h3>&#x1F4CA; My Chart</h3>
+        </div>
+        <div class="card-body">
+          <p>
+            Replace the placeholder in <code>build_my_chart()</code> with your
+            own chart. It should work for any Pokémon — try a few!
+          </p>
+          <div id="my-chart" class="chart-container">{{ my_chart | safe }}</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function searchPokemon() {
+        const input = document.getElementById("pokemon-input");
+        const errorEl = document.getElementById("search-error");
+        const name = input.value.trim().toLowerCase();
+
+        if (!name) return;
+        errorEl.textContent = "";
+
+        const response = await fetch(
+          `/search?pokemon=${encodeURIComponent(name)}`,
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          errorEl.textContent = data.error;
+          return;
+        }
+
+        // Update sprite + name pill
+        const sprite = document.getElementById("pokemon-sprite");
+        sprite.src = data.sprite_url;
+        sprite.alt = `Sprite of ${data.display_name}`;
+        document.getElementById("pokemon-name").textContent = data.display_name;
+
+        // Swap all three chart containers
+        document.getElementById("bad-chart").innerHTML = data.bad_chart;
+        document.getElementById("good-chart").innerHTML = data.good_chart;
+        document.getElementById("my-chart").innerHTML = data.my_chart;
+
+        // Re-execute embedded Plotly scripts so charts actually render
+        ["bad-chart", "good-chart", "my-chart"].forEach((id) => {
+          document.querySelectorAll(`#${id} script`).forEach((old) => {
+            const s = document.createElement("script");
+            s.textContent = old.textContent;
+            old.parentNode.replaceChild(s, old);
+          });
+        });
+
+        // Give Plotly a moment to render, then trigger a resize so charts
+        // fill their card containers correctly
+        setTimeout(() => {
+          document
+            .querySelectorAll(".chart-container .plotly-graph-div")
+            .forEach((el) => Plotly.Plots.resize(el));
+        }, 100);
+      }
+
+      document
+        .getElementById("pokemon-input")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") searchPokemon();
+        });
+    </script>
+  </body>
+</html>

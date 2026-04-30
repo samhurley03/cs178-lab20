@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }} — CS 178</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0;
+        padding: 20px;
+        color: #222;
+      }
+      nav {
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+      }
+      nav a {
+        color: #1e40af;
+        text-decoration: none;
+      }
+      nav a:hover {
+        text-decoration: underline;
+      }
+      h1 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">&larr; Back to all charts</a></nav>
+    <h1>{{ title }}</h1>
+
+    <!--
+        fig.to_html(full_html=False) gives us a <div> containing the chart.
+        The | safe filter tells Jinja2 to render it as raw HTML, not escaped text.
+    -->
+    {{ chart | safe }}
+  </body>
+</html>
