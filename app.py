@@ -117,17 +117,7 @@ def build_bad_chart(df):
 
 
 def build_good_chart(df, display_name, types):
-    """
-    TODO (Part A): Students replace the pie chart below with a radar chart,
-    then update the fillcolor and line color to match the Pokémon's type.
 
-    'types' is a list of type name strings, e.g. ["fire", "flying"].
-    types[0] is the primary type. Use TYPE_COLORS[types[0]] to get its hex color.
-    """
-
-    # ── Type color reference ───────────────────────────────────────────────────
-    # Standard Pokémon type colors — same palette used in the games and Bulbapedia.
-    # Use this dict to look up the hex color for any type name.
     TYPE_COLORS = {
         "normal":   "#A8A878", "fire":     "#F08030", "water":    "#6890F0",
         "electric": "#F8D030", "grass":    "#78C850", "ice":      "#98D8D8",
@@ -137,13 +127,21 @@ def build_good_chart(df, display_name, types):
         "dark":     "#705848", "steel":    "#B8B8D0", "fairy":    "#EE99AC",
     }
 
-    # ── START: Replace this with your radar chart, then update the color ───────
-
-    # Step 1 — paste the radar chart code from the lab doc here.
+    # Radar setup
     stats  = df["stat"].tolist()
     values = df["value"].tolist()
     stats_closed  = stats  + [stats[0]]
     values_closed = values + [values[0]]
+
+    # Get primary type color
+    primary_color = TYPE_COLORS[types[0]]
+
+    # Convert hex to rgba with transparency for fill
+    hex_color = primary_color.lstrip("#")
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    fill_rgba = f"rgba({r}, {g}, {b}, 0.3)"
 
     good_fig = go.Figure()
 
@@ -151,8 +149,8 @@ def build_good_chart(df, display_name, types):
         r=values_closed,
         theta=stats_closed,
         fill="toself",
-        fillcolor="rgba(253, 151, 31, 0.3)",  # ← you'll change this
-        line=dict(color="#fd971f"),            # ← and this
+        fillcolor=fill_rgba,
+        line=dict(color=primary_color, width=3),
         name=display_name,
     ))
 
@@ -164,23 +162,9 @@ def build_good_chart(df, display_name, types):
                 range=[0, 160],
             )
         ),
+        showlegend=False
     )
 
-
-    # Step 2 — replace the hardcoded fillcolor and line color with the
-    #           color for this Pokémon's primary type. For example, if the
-    #           primary type is "fire" the color would be TYPE_COLORS["fire"].
-    #           Use types[0] to always get the primary type dynamically.
-
-    good_fig = px.pie(
-        df,
-        names="stat",
-        values="value",
-        color="stat",
-    )
-
-
-    # ── END ────────────────────────────────────────────────────────────────────
     return apply_dark_theme(good_fig)
 
 
