@@ -170,19 +170,36 @@ def build_good_chart(df, display_name, types):
 
 def build_my_chart(df, display_name, types):
     """
-    TODO (Part B): Students replace this placeholder with their own chart.
-
-    Use 'df' — it has two columns: "stat" and "value".
-    'types' is available here too if you want to use the type color.
-    Pick a chart type different from both the pie and the radar.
-    Your chart should work well for any Pokémon, not just Charizard.
+    Custom chart: Sorted horizontal bar chart of base stats.
     """
-    # ── Replace this placeholder with your own chart ───────────────────────────
-    fig = go.Figure()
-    fig.update_layout(
-        title="Your chart goes here — edit build_my_chart() in app.py",
+
+    import plotly.express as px
+
+    # Sort stats from highest to lowest
+    df_sorted = df.sort_values("value", ascending=True)
+
+    # Colorblind-safe palette (Plotly built-in)
+    color_sequence = px.colors.qualitative.Safe
+
+    fig = px.bar(
+        df_sorted,
+        x="value",
+        y="stat",
+        orientation="h",
+        title=f"{display_name} — Base Stats (Sorted)",
+        labels={
+            "value": "Base Stat Value",
+            "stat": "Stat"
+        },
+        color="stat",
+        color_discrete_sequence=color_sequence
     )
-    # ── End of placeholder ─────────────────────────────────────────────────────
+
+    fig.update_layout(
+        showlegend=False,
+        xaxis=dict(range=[0, 160])
+    )
+
     return apply_dark_theme(fig)
 
 
